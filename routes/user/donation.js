@@ -1,3 +1,4 @@
+const Donation = require("../../models/DonationBox");
 const DonationRequest = require("../../models/DonationRequest");
 
 const router = require("express").Router();
@@ -46,6 +47,29 @@ router.get("/deleteRequest/:id", async (req, res) => {
         const requestId = req.params.id;
         await DonationRequest.deleteOne({ _id: requestId, status: "Pending" })
         res.status(201).json({ success: true, message: "Request Deleted" })
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.toString() })
+    }
+})
+
+router.post("/add", async (req, res) => {
+    try {
+        const { email, amount } = req.body;
+        await Donation.create({ email, amount });
+        res.status(201).json({ success: true, message: "Donation Added" })
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.toString() })
+    }
+})
+
+router.get("/all", async (req, res) => {
+    try {
+        const donations = await Donation.find().sort({ createdAt: -1 })
+        let sum = 0;
+        for (let i = 0; i < donations.length; i++) {
+            sum += donations[i].amount;
+        }
+        res.status(201).json({ success: true, data: { donations, sum } })
     } catch (error) {
         res.status(500).json({ success: false, error: error.toString() })
     }
