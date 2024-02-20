@@ -54,8 +54,8 @@ router.get("/deleteRequest/:id", async (req, res) => {
 
 router.post("/add", async (req, res) => {
     try {
-        const { email, amount } = req.body;
-        await Donation.create({ email, amount });
+        const { userId, amount } = req.body;
+        await Donation.create({ userId, amount });
         res.status(201).json({ success: true, message: "Donation Added" })
     } catch (error) {
         res.status(500).json({ success: false, error: error.toString() })
@@ -64,7 +64,8 @@ router.post("/add", async (req, res) => {
 
 router.get("/all", async (req, res) => {
     try {
-        const donations = await Donation.find().sort({ createdAt: -1 })
+        // console.log("object")
+        const donations = await Donation.find().sort({ createdAt: -1 }).populate('userId')
         let sum = 0;
         for (let i = 0; i < donations.length; i++) {
             sum += donations[i].amount;

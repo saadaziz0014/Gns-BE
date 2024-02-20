@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const donationBoxSchema = new mongoose.Schema({
-    email: String,
+    userId: { type: mongoose.Types.ObjectId, ref: "User" },
     amount: Number,
 }, { timestamps: true })
 

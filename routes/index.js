@@ -10,6 +10,7 @@ const userRouters = require("./user/user");
 const requestRouter = require("./user/request");
 const donationRouter = require("./user/donation");
 const adminDonationRouter = require("./admin/donation");
+const communityRouter = require("./user/community");
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
@@ -20,5 +21,6 @@ app.use("/users", userRouters);
 app.use("/request", requestRouter);
 app.use("/donation", donationRouter);
 app.use("/adminDonation", adminDonationRouter);
+app.use("/community", communityRouter);
 
 module.exports = app;

@@ -31,7 +31,7 @@ router.post("/register", async (req, res) => {
     if (!email || !password || !name || !role || !location) {
       return res.status(202).json({ message: "Fill All Details" });
     }
-    const exist = await User.findOne({ email });
+    const exist = await User.findOne({ email: { $regex: email, $options: 'i' } });
     if (exist) {
       return res.status(202).json({ message: "Email Exist" });
     }
@@ -56,7 +56,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: { $regex: email, $options: 'i' } });
     if (!user) {
       return res.status(202).json({ message: "Invalid Credentials" });
     } else if (user.status == "Blocked") {
