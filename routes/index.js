@@ -11,6 +11,7 @@ const requestRouter = require("./user/request");
 const donationRouter = require("./user/donation");
 const adminDonationRouter = require("./admin/donation");
 const communityRouter = require("./user/community");
+const eventRouter = require("./user/event");
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
@@ -22,5 +23,6 @@ app.use("/request", requestRouter);
 app.use("/donation", donationRouter);
 app.use("/adminDonation", adminDonationRouter);
 app.use("/community", communityRouter);
+app.use("/event", eventRouter);
 
 module.exports = app;
