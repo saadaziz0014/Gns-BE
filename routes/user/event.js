@@ -1,24 +1,38 @@
 const Community = require("../../models/Community");
-const CommunityRequest = require("../../models/CommunityRequest");
-
+const Event = require("../../models/Event");
+const nodemailer = require("nodemailer");
+const User = require("../../models/User");
 const router = require("express").Router();
+
+var transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: 465,
+  auth: {
+    user: process.env.MAIL_SENDER_EMAIL,
+    pass: process.env.MAIL_PASSWORD,
+  },
+});
 
 router.post("/add", async (req, res) => {
   try {
-    const { org, title, allowed } = req.body;
-    const exist = await Community.findOne({
-      title: { $regex: title, $options: "i" },
+    const { community, purpose, date } = req.body;
+    const exist = await Event.findOne({
+      purpose: { $regex: purpose, $options: "i" },
+      community,
       isDeleted: false,
     });
     if (exist) {
-      return res.status(202).json({ success: false, message: "Title exist" });
+      return res.status(202).json({ success: false, message: "Exist with Same Puropose" });
     }
-    await Community.create({ org, title, allowed });
-    res.status(201).json({ success: true, message: "Community Added" });
+    await Event.create({ community, purpose, date });
+    res.status(201).json({ success: true, message: "Event Added" });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error: error.toString() });
   }
 });
+
+
 
 router.get("/all", async (req, res) => {
   try {
@@ -51,42 +65,72 @@ router.get("/toogle/:id", async (req, res) => {
   }
 });
 
-router.post("/addRequest", async (req, res) => {
+router.get("/delete/:id", async (req, res) => {
   try {
-    const { organization, community, volunteer } = req.body;
-    const exist = await CommunityRequest.findOne({
-      organization,
-      volunteer,
-      community,
-    });
-    if (exist) {
-      return res.status(202).json({ success: false, message: "Request exist" });
-    }
-    await CommunityRequest.create({ organization, volunteer, community });
-    res.status(201).json({ success: true, message: "Request Added" });
+    const id = req.params.id;
+    await Event.findByIdAndUpdate(id, { isDeleted: true });
+    res.status(201).json({ success: true, message: "Done" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });
   }
 });
 
-router.get("/our/:id", async (req, res) => {
+
+
+router.get("/mail/:communityId/:eventId", async (req, res) => {
+  try {
+    const community = req.params.communityId;
+    const event = req.params.eventId;
+    let currentDate = new Date();
+    let eventE = await Event.findById(event);
+    let eventDate = new Date(eventE.date);
+    if (currentDate > eventDate) {
+      return res.status(202).json({ success: false, message: "Event Date Passed" })
+    }
+    let communityE = await Community.findById(community).populate("org");
+    for (let i = 0; i < communityE.volunteers.length; i++) {
+      let user = await User.findById(communityE.volunteers[i]);
+      const subject = "New Event Added";
+      let body = `<p>Dear <strong>${user.name}</strong>,</p> <br/> <p> new Event on <strong>${eventE.purpose}</strong> by <strong>${communityE.org.name}</strong> on ${eventE.date}</p>`;
+      const mailOptions = {
+        from: `${process.env.MAIL_SENDER_NAME} <${process.env.MAIL_SENDER_EMAIL}>`,
+        to: user.email,
+        subject: subject,
+        html: body,
+      };
+
+      await transporter.sendMail(mailOptions)
+    }
+    res.status(201).json({ message: "Mail Sent" })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+});
+
+router.get("/events/:id", async (req, res) => {
+  try {
+    const community = req.params.id;
+    let currentDate = new Date();
+    let events = await Event.find({ community, isDeleted: false }).lean();
+    events = events.filter((event) => {
+      let eventDate = new Date(event.date);
+      return eventDate > currentDate
+    })
+    res.status(201).json({ success: true, events })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString() })
+  }
+})
+
+router.get("/community/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    let communities = await Community.find({
-      org: id,
+    let events = await Event.find({
+      community: id,
       isDeleted: false,
-    }).lean();
-    for (let i = 0; i < communities.length; i++) {
-      communities[i].value =
-        (communities[i].volunteers.length / communities[i].allowed) * 100;
-      let requests = await CommunityRequest.find({
-        community: communities[i]._id,
-        status: "Pending",
-        isDeleted: false,
-      }).countDocuments();
-      communities[i].requests = requests;
-    }
-    res.status(201).json({ success: true, communities });
+    });
+    res.status(201).json({ success: true, events });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });
   }
