@@ -2,6 +2,8 @@ const { default: mongoose } = require("mongoose");
 const User = require("../../models/User");
 const Category = require("../../models/Category");
 const Contact = require("../../models/Contact");
+const BeneficiaryRequest = require("../../models/BeneficiaryRequest");
+const DonationRequest = require("../../models/DonationRequest");
 
 const router = require("express").Router();
 
@@ -111,8 +113,65 @@ router.get("/allComplaints", async (req, res) => {
     const complains = await Contact.find().sort({ createdAt: -1 });
     res.status(201).json({ success: true, complains });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.toString() })
+    res.status(500).json({ success: false, error: error.toString() });
   }
-})
+});
+
+router.get("/totalUser", async (req, res) => {
+  try {
+    let volunteers = await User.find({
+      role: "volunteer",
+      status: "Active",
+    }).countDocuments();
+    let organizations = await User.find({
+      role: "organization",
+      status: "Active",
+    }).countDocuments();
+    let beneficiaries = await User.find({
+      role: "beneficiary",
+      status: "Active",
+    }).countDocuments();
+    let admins = await User.find({
+      role: "admin",
+      status: "Active",
+    }).countDocuments();
+    res.status(201).json({
+      success: true,
+      data: { beneficiaries, organizations, volunteers, admins },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+});
+
+router.get("/totalRequests", async (req, res) => {
+  try {
+    let allReq = await BeneficiaryRequest.find().lean();
+    let pendingReq = allReq.filter((req) => req.status == "Pending");
+    pendingReq = pendingReq.length;
+    let nonPendingReq = allReq.filter((req) => req.status != "Pending");
+    nonPendingReq = nonPendingReq.length;
+    let allDon = await DonationRequest.find().lean();
+    let pendingDon = allDon.filter((don) => don.status == "Pending");
+    pendingDon = pendingDon.length;
+    let nonPendingDon = allDon.filter((don) => don.status != "Pending");
+    nonPendingDon = nonPendingDon.length;
+    res.status(201).json({
+      success: true,
+      data: { pendingReq, nonPendingReq, pendingDon, nonPendingDon },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString });
+  }
+});
+
+router.get("/allUsers", async (req, res) => {
+  try {
+    let users = await User.find();
+    res.status(201).json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+});
 
 module.exports = router;

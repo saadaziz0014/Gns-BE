@@ -7,7 +7,9 @@ router.post("/login", async (req, res) => {
       email == process.env.ADMIN_EMAIL &&
       password == process.env.ADMIN_PASS
     ) {
-      return res.status(201).json({ success: true, data: { role: "admin" } });
+      return res
+        .status(201)
+        .json({ success: true, data: { role: "superAdmin" } });
     }
     res.status(202).json({ success: false, message: "Invalid Credentials" });
   } catch (error) {
