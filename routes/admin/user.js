@@ -174,4 +174,14 @@ router.get("/allUsers", async (req, res) => {
   }
 });
 
+router.post("/changeRole", async (req, res) => {
+  try {
+    const { id, role } = req.body;
+    await User.findByIdAndUpdate(id, { role });
+    res.status(201).json({ success: true, message: "Role Changed" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+});
+
 module.exports = router;

@@ -31,7 +31,9 @@ router.post("/register", async (req, res) => {
     if (!email || !password || !name || !role || !location) {
       return res.status(202).json({ message: "Fill All Details" });
     }
-    const exist = await User.findOne({ email: { $regex: email, $options: 'i' } });
+    const exist = await User.findOne({
+      email: { $regex: email, $options: "i" },
+    });
     if (exist) {
       return res.status(202).json({ message: "Email Exist" });
     }
@@ -56,7 +58,9 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email: { $regex: email, $options: 'i' } });
+    const user = await User.findOne({
+      email: { $regex: email, $options: "i" },
+    });
     if (!user) {
       return res.status(202).json({ message: "Invalid Credentials" });
     } else if (user.status == "Blocked") {
@@ -69,7 +73,7 @@ router.post("/login", async (req, res) => {
     }
     res.status(201).json({ message: "Logged In", user });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ error: error.toString() });
   }
 });
@@ -80,7 +84,7 @@ router.post("/forgetPassword", async (req, res) => {
     const newPassword = generateRandomString(8);
     const hashedPassword = await bcrypt.hash(newPassword, 8);
     await User.findOneAndUpdate(
-      { email },
+      { email: { $regex: email, $options: "i" } },
       { $set: { password: hashedPassword } }
     );
     const subject = "Forget Password";
@@ -110,7 +114,9 @@ router.post("/forgetPassword", async (req, res) => {
 router.post("/changePassword", async (req, res) => {
   try {
     const { email, oldPassword, newPassword } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email: { $regex: email, $options: "i" },
+    });
     if (!user) {
       return res
         .status(202)

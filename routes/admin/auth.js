@@ -1,12 +1,20 @@
+const User = require("../../models/User");
+const bcrypt = require("bcryptjs");
 const router = require("express").Router();
 
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (
-      email == process.env.ADMIN_EMAIL &&
-      password == process.env.ADMIN_PASS
-    ) {
+    const superAdmin = await User.findOne({
+      email: { $regex: email, $options: "i" },
+    });
+    if (!superAdmin) {
+      return res
+        .status(202)
+        .json({ success: false, message: "Invalid Credentials" });
+    }
+    let compare = await bcrypt.compare(password, superAdmin.password);
+    if (compare) {
       return res
         .status(201)
         .json({ success: true, data: { role: "superAdmin" } });

@@ -4,7 +4,6 @@ const UserSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -24,7 +23,7 @@ const UserSchema = new mongoose.Schema(
       default: "Active",
     },
     location: String,
-    contact: { type: String, default: '' },
+    contact: { type: String, default: "" },
     about: { type: String, default: "" },
     categories: [{ type: mongoose.Types.ObjectId, ref: "Category" }],
   },
