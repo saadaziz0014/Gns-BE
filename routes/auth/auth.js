@@ -1,6 +1,7 @@
 const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const Otp = require("../../models/Otp");
 
 const router = require("express").Router();
 
@@ -23,6 +24,26 @@ var transporter = nodemailer.createTransport({
     pass: process.env.MAIL_PASSWORD,
   },
 });
+
+function generateOTP() {
+
+  var digits = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+  var otpLength = 6;
+
+  var otp = '';
+
+  for (let i = 1; i <= otpLength; i++) {
+
+    var index = Math.floor(Math.random() * (digits.length));
+
+    otp = otp + digits[index];
+
+  }
+
+  return otp;
+
+}
 
 router.post("/register", async (req, res) => {
   try {
@@ -49,7 +70,27 @@ router.post("/register", async (req, res) => {
       categories,
       location,
     });
-    res.status(201).json({ message: "Registered", data: user });
+    let otp = generateOTP();
+    await Otp.create({ user: user._id, otp })
+    const subject = "Sign Up OTP";
+    let body = `<p>Your One Time Password for Sign up Verification is <strong>${otp}</strong> \n Do not share it</p>`;
+    const mailOptions = {
+      from: `${process.env.MAIL_SENDER_NAME} <${process.env.MAIL_SENDER_EMAIL}>`,
+      to: email,
+      subject: subject,
+      html: body,
+    };
+
+    return transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error, "error in mail");
+        return res
+          .status(202)
+          .json({ success: false, message: "Error in sending mail" });
+      } else {
+        return res.status(201).json({ success: true, message: "Check Mail for OTP", user });
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }
@@ -66,12 +107,34 @@ router.post("/login", async (req, res) => {
     } else if (user.status == "Blocked") {
       return res.status(202).json({ message: "Blocked By Admin" });
     }
+    else if (user.verify == false) {
+      return res.status(202).json({ message: "OTP not Verified" })
+    }
     const hashedPassword = user.password;
     const compare = await bcrypt.compare(password, hashedPassword);
     if (!compare) {
       return res.status(202).json({ message: "Invalid Credentials" });
     }
     res.status(201).json({ message: "Logged In", user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
+router.post("/otp", async (req, res) => {
+  try {
+    const { id, otp } = req.body;
+    console.log(id, otp)
+    let chk = await Otp.findOne({ user: id, otp });
+    if (chk) {
+      await Otp.findByIdAndDelete(chk._id)
+      let user = await User.findByIdAndUpdate(id, { verify: true }, { new: true });
+      return res.status(201).json({ message: "Correct", user });
+    }
+    else {
+      res.status(202).json({ message: "OTP incorrect" })
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.toString() });

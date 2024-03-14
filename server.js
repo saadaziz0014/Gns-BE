@@ -5,6 +5,8 @@ require("dotenv").config();
 const indexRouter = require("./routes/index");
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
+const cron = require('node-cron');
+const Otp = require("./models/Otp");
 
 const app = express();
 app.use(express.json());
@@ -29,3 +31,15 @@ mongoose.connect(process.env.DATABASE_URL).then(async () => {
     console.log(`Server listening on http://127.0.0.1:${process.env.PORT}`);
   });
 });
+
+
+// cron.schedule('* * * * *', async () => {
+//   await Otp.deleteMany({
+//     $expr: {
+//       $gt: [
+//         { $subtract: [new Date(), '$createdAt'] },
+//         10 * 60 * 1000
+//       ]
+//     }
+//   })
+// })
