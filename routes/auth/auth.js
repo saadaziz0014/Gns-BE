@@ -175,10 +175,8 @@ router.post("/forgetPassword", async (req, res) => {
 
 router.post("/changePassword", async (req, res) => {
   try {
-    const { email, oldPassword, newPassword } = req.body;
-    const user = await User.findOne({
-      email: { $regex: email, $options: "i" },
-    });
+    const { id, oldPassword, newPassword } = req.body;
+    const user = await User.findById(id);
     if (!user) {
       return res
         .status(202)
