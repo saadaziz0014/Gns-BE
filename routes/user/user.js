@@ -17,14 +17,46 @@ router.post("/about/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const { about, contact, name, location } = req.body;
-    const user = await User.findByIdAndUpdate(id, { about, contact, name, location });
+    const user = await User.findByIdAndUpdate(id, {
+      about,
+      contact,
+      name,
+      location,
+    });
     res.status(201).json({ success: true, message: "About Updated" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });
   }
 });
 
-
+router.get("/all/:location", async (req, res) => {
+  try {
+    let location = req.params.location;
+    let volunteers = await User.find({
+      role: "volunteer",
+      status: "Active",
+      location: { $regex: location, $options: "i" },
+    }).countDocuments();
+    let organizations = await User.find({
+      role: "organization",
+      status: "Active",
+      location: { $regex: location, $options: "i" },
+    }).countDocuments();
+    let beneficiaries = await User.find({
+      role: "beneficiary",
+      status: "Active",
+      location: { $regex: location, $options: "i" },
+    }).countDocuments();
+    let data = {
+      beneficiaries,
+      volunteers,
+      organizations,
+    };
+    res.status(201).json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+});
 
 router.post("/addCategory", async (req, res) => {
   try {
