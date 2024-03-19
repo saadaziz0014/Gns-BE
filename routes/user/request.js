@@ -1,4 +1,3 @@
-const { default: mongoose } = require("mongoose");
 const BeneficiaryRequest = require("../../models/BeneficiaryRequest");
 
 const router = require("express").Router();
@@ -60,28 +59,6 @@ router.get("/deleteRequest/:id", async (req, res) => {
         await BeneficiaryRequest.deleteOne({ _id: requestId, status: "Pending" })
         res.status(201).json({ success: true, message: "Request Deleted" })
     } catch (error) {
-        res.status(500).json({ success: false, error: error.toString() })
-    }
-})
-
-router.get("/history/:id", async (req, res) => {
-    try {
-        const beneficiary = req.params.id;
-        let history = await BeneficiaryRequest.find({ beneficiary });
-        res.status(201).json({ success: true, history })
-    } catch (error) {
-        // console.log(error)
-        res.status(500).json({ success: false, error: error.toString() })
-    }
-})
-
-router.get("/historyR/:id", async (req, res) => {
-    try {
-        const benefactor = req.params.id;
-        let history = await BeneficiaryRequest.find({ benefactor });
-        res.status(201).json({ success: true, history })
-    } catch (error) {
-        // console.log(error)
         res.status(500).json({ success: false, error: error.toString() })
     }
 })

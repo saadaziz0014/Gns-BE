@@ -26,7 +26,6 @@ const UserSchema = new mongoose.Schema(
     contact: { type: String, default: "" },
     about: { type: String, default: "" },
     categories: [{ type: mongoose.Types.ObjectId, ref: "Category" }],
-    verify: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
