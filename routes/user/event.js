@@ -1,4 +1,5 @@
 const Community = require("../../models/Community");
+const CommunityRequest = require("../../models/CommunityRequest");
 const Event = require("../../models/Event");
 const nodemailer = require("nodemailer");
 const User = require("../../models/User");
@@ -175,10 +176,33 @@ router.post("/decideRequest/:id", async (req, res) => {
       { status: decision },
       { new: true }
     );
-    if (decision == "Accepted")
+    let mailOptions;
+    let user = await User.findById(request.volunteer);
+    let community = await Community.findById(request.community);
+    if (decision == "Accepted") {
       await Community.findByIdAndUpdate(request.community, {
         $addToSet: { volunteers: request.volunteer },
       });
+      const subject = "Community Joining Request Accepted";
+      let body = `<p>Dear <strong>${user.name}</strong>,</p> <br/> <p>Your Request for ${community.title} Accepted</p>`;
+      mailOptions = {
+        from: `${process.env.MAIL_SENDER_NAME} <${process.env.MAIL_SENDER_EMAIL}>`,
+        to: user.email,
+        subject: subject,
+        html: body,
+      };
+    }
+    else {
+      const subject = "Community Joining Request Accepted";
+      let body = `<p>Dear <strong>${user.name}</strong>,</p> <br/> <p>Your Request for ${community.title} Rejected</p>`;
+      mailOptions = {
+        from: `${process.env.MAIL_SENDER_NAME} <${process.env.MAIL_SENDER_EMAIL}>`,
+        to: user.email,
+        subject: subject,
+        html: body,
+      };
+    }
+    await transporter.sendMail(mailOptions)
     res.status(201).json({ success: true, message: "Decision Done" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });

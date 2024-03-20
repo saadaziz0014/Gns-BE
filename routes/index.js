@@ -12,6 +12,7 @@ const donationRouter = require("./user/donation");
 const adminDonationRouter = require("./admin/donation");
 const communityRouter = require("./user/community");
 const eventRouter = require("./user/event");
+const categoryRequestRouter = require("./user/categoryRequest");
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
@@ -24,5 +25,6 @@ app.use("/donation", donationRouter);
 app.use("/adminDonation", adminDonationRouter);
 app.use("/community", communityRouter);
 app.use("/event", eventRouter);
+app.use("/categoryRequest", categoryRequestRouter);
 
 module.exports = app;
