@@ -132,10 +132,11 @@ router.get("/allDonationBen/:id", async (req, res) => {
 router.post("/sendDonation/:id", async (req, res) => {
     try {
         const reqId = req.params.id;
-        const amount = req.body;
+        const amount = req.body.amount;
         await DonationRequestBen.findByIdAndUpdate(reqId, { status: "PaymentDone", amountReceived: amount })
         res.status(201).json({ success: true, message: "Payment Done" })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ success: false, error: error.toString() })
     }
 })
@@ -143,8 +144,17 @@ router.post("/sendDonation/:id", async (req, res) => {
 router.get("/myDonationBen/:id", async (req, res) => {
     try {
         const beneficiary = req.params.id;
-        const requests = await DonationRequestBen.find({ status: "Verified", beneficiary }).populate('benefactor');
+        const requests = await DonationRequestBen.find({ beneficiary }).populate('benefactor');
         res.status(201).json({ success: true, requests })
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.toString() })
+    }
+})
+
+router.get("/withdraw/:id", async (req, res) => {
+    try {
+        const reqId = req.params.id;
+        await DonationRequestBen.findByIdAndDelete(reqId, { status: "Withdrawal" })
     } catch (error) {
         res.status(500).json({ success: false, error: error.toString() })
     }
