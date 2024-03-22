@@ -24,6 +24,15 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "Active",
     },
+    ratings: [
+      {
+        userId: {
+          type: mongoose.Types.ObjectId,
+          ref: "User"
+        },
+        rating: { type: Number, default: 0 }
+      },
+    ],
     location: String,
     contact: { type: String, default: "" },
     about: { type: String, default: "" },
