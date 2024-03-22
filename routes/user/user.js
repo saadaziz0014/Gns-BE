@@ -95,4 +95,28 @@ router.get("/city/loadCities", async (req, res) => {
   }
 });
 
+router.post("/addRating/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { userId, rating } = req.body;
+    console.log(userId, ' ', rating, ' ')
+    const user = await User.find({ _id: id, ratings: { $elemMatch: { userId: userId } } });
+    if (user.length > 0) {
+      await User.findByIdAndUpdate(id, {
+        $set: {
+          "ratings.$[u].rating": rating,
+        }
+      }, { arrayFilters: [{ "u.userId": userId }] });
+    } else {
+      await User.findByIdAndUpdate(id, {
+        $push: { ratings: { userId, rating } }
+      })
+    }
+    res.status(201).json({ success: true, message: "Rating Added" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: error.toString() });
+  }
+})
+
 module.exports = router;
