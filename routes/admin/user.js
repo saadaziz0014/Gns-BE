@@ -70,6 +70,42 @@ router.get("/allVolunteers", async (req, res) => {
   }
 });
 
+router.get("/allServices", async (req, res) => {
+  try {
+    let all = await User.find({ status: "Active", $or: [{ role: "volunteer" }, { role: "organization" }] }).lean();
+    let ratings = 0;
+    let cats = [];
+    for (let i = 0; i < all.length; i++) {
+      cats = [];
+      let sum = 0;
+      if (!all[i].ratings || all[i].ratings.length == 0) {
+        all[i].ratings = 0;
+      }
+      else {
+        for (k = 0; k < all[i].ratings.length; k++) {
+          sum += all[i].ratings[k].rating;
+        }
+        ratings = sum / all[i].ratings.length;
+        all[i].ratings = ratings;
+      }
+      for (let j = 1; j < all[i].categories.length; j++) {
+        let cat = await Category.findOne({
+          _id: all[i].categories[j]._id,
+          isDeleted: false,
+        });
+        cats.push(cat.name);
+      }
+      all[i].cats = cats;
+    }
+    all.sort((a, b) => b.ratings - a.ratings);
+    console.log(all)
+    res.status(201).json({ all });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 router.get("/allVolunteersU", async (req, res) => {
   try {
     let volunteers = await User.find({
