@@ -23,7 +23,7 @@ router.post("/about/:id", async (req, res) => {
       name,
       location,
       firstName,
-      lastName
+      lastName,
     });
     res.status(201).json({ success: true, message: "About Updated" });
   } catch (error) {
@@ -99,24 +99,31 @@ router.post("/addRating/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const { userId, rating } = req.body;
-    console.log(userId, ' ', rating, ' ')
-    const user = await User.find({ _id: id, ratings: { $elemMatch: { userId: userId } } });
+    // console.log(userId, ' ', rating, ' ')
+    const user = await User.find({
+      _id: id,
+      ratings: { $elemMatch: { userId: userId } },
+    });
     if (user.length > 0) {
-      await User.findByIdAndUpdate(id, {
-        $set: {
-          "ratings.$[u].rating": rating,
-        }
-      }, { arrayFilters: [{ "u.userId": userId }] });
+      await User.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            "ratings.$[u].rating": rating,
+          },
+        },
+        { arrayFilters: [{ "u.userId": userId }] }
+      );
     } else {
       await User.findByIdAndUpdate(id, {
-        $push: { ratings: { userId, rating } }
-      })
+        $push: { ratings: { userId, rating } },
+      });
     }
     res.status(201).json({ success: true, message: "Rating Added" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error: error.toString() });
   }
-})
+});
 
 module.exports = router;

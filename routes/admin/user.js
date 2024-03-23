@@ -72,7 +72,10 @@ router.get("/allVolunteers", async (req, res) => {
 
 router.get("/allServices", async (req, res) => {
   try {
-    let all = await User.find({ status: "Active", $or: [{ role: "volunteer" }, { role: "organization" }] }).lean();
+    let all = await User.find({
+      status: "Active",
+      $or: [{ role: "volunteer" }, { role: "organization" }],
+    }).lean();
     let ratings = 0;
     let cats = [];
     for (let i = 0; i < all.length; i++) {
@@ -80,12 +83,11 @@ router.get("/allServices", async (req, res) => {
       let sum = 0;
       if (!all[i].ratings || all[i].ratings.length == 0) {
         all[i].ratings = 0;
-      }
-      else {
+      } else {
         for (k = 0; k < all[i].ratings.length; k++) {
           sum += all[i].ratings[k].rating;
         }
-        ratings = sum / all[i].ratings.length;
+        ratings = Math.ceil(sum / all[i].ratings.length);
         all[i].ratings = ratings;
       }
       for (let j = 1; j < all[i].categories.length; j++) {
@@ -98,7 +100,7 @@ router.get("/allServices", async (req, res) => {
       all[i].cats = cats;
     }
     all.sort((a, b) => b.ratings - a.ratings);
-    console.log(all)
+    // console.log(all);
     res.status(201).json({ all });
   } catch (error) {
     console.log(error);
