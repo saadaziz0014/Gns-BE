@@ -1,5 +1,6 @@
 const User = require("../../models/User");
 const City = require("../../models/City");
+const Dialer = require("../../models/Dialer");
 
 const router = require("express").Router();
 
@@ -93,6 +94,11 @@ router.get("/city/loadCities", async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });
   }
+});
+
+router.get("/dialer/load", async (req, res) => {
+  const dialers = await Dialer.find().select("dial_code");
+  res.status(201).json({ success: true, dialers });
 });
 
 router.post("/addRating/:id", async (req, res) => {
