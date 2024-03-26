@@ -65,12 +65,12 @@ router.get("/decideRequest/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const decision = req.query.decision;
-    let req = await BeneficiaryRequest.findByIdAndUpdate(
+    let request = await BeneficiaryRequest.findByIdAndUpdate(
       id,
       { status: decision },
       { new: true }
     );
-    let beneficiary = await User.findById(req.beneficiary);
+    let beneficiary = await User.findById(request.beneficiary);
     const subject = "Request Decision";
     let body = `<p>Dear <strong>${beneficiary.name}</strong>,</p> <br/> <p> Your Request has decided check it on genserve</p>`;
     const mailOptions = {
@@ -90,6 +90,7 @@ router.get("/decideRequest/:id", async (req, res) => {
       }
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error: error.toString() });
   }
 });
