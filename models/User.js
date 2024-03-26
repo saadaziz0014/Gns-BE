@@ -28,16 +28,17 @@ const UserSchema = new mongoose.Schema(
       {
         userId: {
           type: mongoose.Types.ObjectId,
-          ref: "User"
+          ref: "User",
         },
-        rating: { type: Number, default: 0 }
+        rating: { type: Number, default: 0 },
       },
     ],
     location: String,
     contact: { type: String, default: "" },
     about: { type: String, default: "" },
     categories: [{ type: mongoose.Types.ObjectId, ref: "Category" }],
-    verify: { type: Boolean, default: false }
+    verify: { type: Boolean, default: false },
+    amount: Number,
   },
   { timestamps: true }
 );
