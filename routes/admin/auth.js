@@ -19,7 +19,7 @@ router.post("/login", async (req, res) => {
         .status(201)
         .json({ success: true, data: { role: "superAdmin" } });
     }
-    res.status(202).json({ success: false, message: "Invalid Credentials" });
+    res.status(202).json({ success: false, message: "Invalid Password" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });
   }
