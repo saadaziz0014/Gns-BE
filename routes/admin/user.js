@@ -9,7 +9,7 @@ const router = require("express").Router();
 
 router.get("/allBeneficiaries", async (req, res) => {
   try {
-    const beneficiaries = await User.find({ role: "beneficiary" });
+    const beneficiaries = await User.find({ role: "beneficiary", verify:true });
     res.status(201).json({ beneficiaries });
   } catch (error) {
     res.status(500).json({ error: error.toString() });
@@ -21,6 +21,7 @@ router.get("/allBeneficiariesU", async (req, res) => {
     const beneficiaries = await User.find({
       role: "beneficiary",
       status: "Active",
+      verify:true
     });
     res.status(201).json({ beneficiaries });
   } catch (error) {
@@ -30,7 +31,7 @@ router.get("/allBeneficiariesU", async (req, res) => {
 
 router.get("/allOrganizations", async (req, res) => {
   try {
-    const organizations = await User.find({ role: "organization" });
+    const organizations = await User.find({ role: "organization", verify:true });
     res.status(201).json({ organizations });
   } catch (error) {
     res.status(500).json({ error: error.toString() });
@@ -42,6 +43,7 @@ router.get("/allOrganizationsU", async (req, res) => {
     let organizations = await User.find({
       role: "organization",
       status: "Active",
+      verify:true
     }).lean();
     let cats = [];
     for (let i = 0; i < organizations.length; i++) {
@@ -63,7 +65,7 @@ router.get("/allOrganizationsU", async (req, res) => {
 
 router.get("/allVolunteers", async (req, res) => {
   try {
-    const volunteers = await User.find({ role: "volunteer" });
+    const volunteers = await User.find({ role: "volunteer",verify:true });
     res.status(201).json({ volunteers });
   } catch (error) {
     res.status(500).json({ error: error.toString() });
@@ -75,6 +77,7 @@ router.get("/allServices", async (req, res) => {
     let all = await User.find({
       status: "Active",
       $or: [{ role: "volunteer" }, { role: "organization" }],
+      verify:true
     }).lean();
     let ratings = 0;
     let cats = [];
@@ -113,6 +116,7 @@ router.get("/allVolunteersU", async (req, res) => {
     let volunteers = await User.find({
       role: "volunteer",
       status: "Active",
+      verify:true
     }).lean();
     let cats = [];
     for (let i = 0; i < volunteers.length; i++) {
@@ -160,18 +164,22 @@ router.get("/totalUser", async (req, res) => {
     let volunteers = await User.find({
       role: "volunteer",
       status: "Active",
+      verify:true
     }).countDocuments();
     let organizations = await User.find({
       role: "organization",
       status: "Active",
+      verify:true
     }).countDocuments();
     let beneficiaries = await User.find({
       role: "beneficiary",
       status: "Active",
+      verify:true
     }).countDocuments();
     let admins = await User.find({
       role: "admin",
       status: "Active",
+      verify:true
     }).countDocuments();
     res.status(201).json({
       success: true,
@@ -205,7 +213,7 @@ router.get("/totalRequests", async (req, res) => {
 
 router.get("/allUsers", async (req, res) => {
   try {
-    let users = await User.find();
+    let users = await User.find({status:"Active",verify:true});
     res.status(201).json({ success: true, users });
   } catch (error) {
     res.status(500).json({ success: false, error: error.toString() });

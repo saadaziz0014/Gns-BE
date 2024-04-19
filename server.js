@@ -16,6 +16,9 @@ app.use("/", indexRouter);
 
 mongoose.connect(process.env.DATABASE_URL).then(async () => {
   let superAdmin = await User.findOne({ email: process.env.ADMIN_EMAIL });
+  if(superAdmin && superAdmin.verify == false){
+    await User.findOneAndUpdate({email},{$set:{verify:true}})
+  }
   if (!superAdmin) {
     const exist = await User.findOne({
       email: { $regex: process.env.ADMIN_EMAIL, $options: "i" },
@@ -25,6 +28,7 @@ mongoose.connect(process.env.DATABASE_URL).then(async () => {
       email: process.env.ADMIN_EMAIL,
       password: hashedPassword,
       role: "superAdmin",
+      verify:true
     });
   }
   app.listen(process.env.PORT, () => {
