@@ -1,3 +1,4 @@
+const { jazzCashTransaction } = require("../../helper/payment");
 const Donation = require("../../models/DonationBox");
 const DonationRequest = require("../../models/DonationRequest");
 const User = require("../../models/User");
@@ -60,7 +61,11 @@ router.get("/deleteRequest/:id", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { userId, amount } = req.body;
+    const { userId, amount, number } = req.body;
+    let paymentResp = await jazzCashTransaction(amount, number);
+    if (paymentResp.success != true) {
+      return res.status(203).json({ result: paymentResp.message });
+    }
     await Donation.create({ userId, amount });
     await User.findOneAndUpdate(
       {
