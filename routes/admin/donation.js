@@ -1,3 +1,4 @@
+const { jazzCashTransaction } = require("../../helper/payment");
 const Donation = require("../../models/DonationBox");
 const DonationRequest = require("../../models/DonationRequest");
 const DonationRequestBen = require("../../models/DonationRequestBen");
@@ -26,16 +27,14 @@ router.post("/addAmount/:id", async (req, res) => {
         .status(202)
         .json({ success: false, message: "Insufficient Donation" });
     }
-    let beneficiary = await DonationRequest.findById(id).populate(
+    let beneficiary = await DonationRequest.findById(req.params.id).populate(
       "beneficiary"
     );
     if (!beneficiary.beneficiary.contact) {
-      return res
-        .status(202)
-        .json({
-          success: false,
-          message: "Beneficiary have no jazzcash number",
-        });
+      return res.status(202).json({
+        success: false,
+        message: "Beneficiary have no jazzcash number",
+      });
     }
     admin.amount = admin.amount - amount;
     await User.findByIdAndUpdate(admin._id, { $inc: { amount: -amount } });
@@ -82,9 +81,27 @@ router.get("/makeVerify/:id", async (req, res) => {
 router.get("/sendAmount/:id", async (req, res) => {
   try {
     const reqId = req.params.id;
-    await DonationRequestBen.findByIdAndUpdate(reqId, { status: "Completed" });
+    let donation = await DonationRequestBen.findById(reqId).populate(
+      "beneficiary"
+    );
+    if (!donation.beneficiary.contact) {
+      return res.status(202).json({
+        success: false,
+        message: "Beneficiary have no jazzcash number",
+      });
+    }
+    let paymentResp = await jazzCashTransaction(
+      donation.amountReceived,
+      process.env.mobileAccountNo
+    );
+    // console.log(paymentResp);
+    await DonationRequestBen.findByIdAndUpdate(reqId, {
+      status: "Completed",
+      refNoBeneficiary: paymentResp.ppTxnRefNo,
+    });
     res.status(201).json({ success: true, message: "Send" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error: error.toString() });
   }
 });

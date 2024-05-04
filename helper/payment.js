@@ -1,9 +1,16 @@
 const Payment = require("../models/Payment");
+const date = require("date-and-time");
+const crypto = require("crypto");
+const request = require("request");
 
 exports.jazzCashTransaction = async (transactionAmount, mobileAccountNo) => {
   transactionAmount *= 100;
   let dateNow = new Date();
   const currentDateTime = date.format(dateNow, "YYYYMMDDHHmmss");
+  const expiryDateTime = date.format(
+    date.addHours(dateNow, 24),
+    "YYYYMMDDHHmmss"
+  );
   const refNo = "T" + currentDateTime;
   const header = {
     "Content-Type": "application/json",
@@ -46,15 +53,16 @@ exports.jazzCashTransaction = async (transactionAmount, mobileAccountNo) => {
   });
   finalString = finalString.substr(0, finalString.length - 1);
   const hash = crypto
-    .createHmac("SHA256", process.env.jazzCashMerchantIntegeritySaltSB)
-    .update(Buffer.from(finalString, "utf-8"))
-    .digest("hex");
+    .createHmac("sha256", process.env.jazzCashMerchantIntegeritySaltSB)
+    .update(finalString)
+    .digest("hex")
+    .toUpperCase();
 
   body.pp_SecureHash = hash;
   body = JSON.stringify(body);
   // console.log(body, "body")
   let options = {
-    url: constants.constants.jazzcashUrlSB + "Payment/DoTransaction",
+    url: process.env.jazzcashUrlSB + "Payment/DoTransaction",
     method: "POST",
     body: body,
     headers: header,
@@ -73,9 +81,11 @@ exports.jazzCashTransaction = async (transactionAmount, mobileAccountNo) => {
       let result = "";
       request(options, async (error, response, body) => {
         result = JSON.parse(body);
+        // console.log(result, "res");
         if (
           result.pp_ResponseCode !== "124" &&
-          result.pp_ResponseCode != "000"
+          result.pp_ResponseCode != "000" &&
+          result.pp_ResponseCode != "110"
         ) {
           console.log("error in jazzcash transaction");
           resolve({
@@ -89,7 +99,9 @@ exports.jazzCashTransaction = async (transactionAmount, mobileAccountNo) => {
             transactionId: result.pp_TxnRefNo ? result.pp_TxnRefNo : "",
             finalAmount: transactionAmount,
             transactionStatus:
-              result.pp_ResponseCode == "124" || result.pp_ResponseCode == "000"
+              result.pp_ResponseCode == "124" ||
+              result.pp_ResponseCode == "000" ||
+              result.pp_ResponseCode == "110"
                 ? "Success"
                 : "Failed",
           };

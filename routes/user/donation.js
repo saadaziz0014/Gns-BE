@@ -64,9 +64,15 @@ router.post("/add", async (req, res) => {
     const { userId, amount, number } = req.body;
     let paymentResp = await jazzCashTransaction(amount, number);
     if (paymentResp.success != true) {
-      return res.status(203).json({ result: paymentResp.message });
+      return res
+        .status(203)
+        .json({ result: paymentResp.response.pp_ResponseMessage });
     }
-    await Donation.create({ userId, amount });
+    await Donation.create({
+      userId,
+      amount,
+      refNo: paymentResp.response.pp_TxnRefNo,
+    });
     await User.findOneAndUpdate(
       {
         email: "sgenservepk@gmail.com",

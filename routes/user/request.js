@@ -3,6 +3,7 @@ const BeneficiaryRequest = require("../../models/BeneficiaryRequest");
 const User = require("../../models/User");
 const DonationRequestBen = require("../../models/DonationRequestBen");
 const nodemailer = require("nodemailer");
+const { jazzCashTransaction } = require("../../helper/payment");
 
 const router = require("express").Router();
 
@@ -90,7 +91,7 @@ router.get("/decideRequest/:id", async (req, res) => {
       }
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ success: false, error: error.toString() });
   }
 });
@@ -192,8 +193,13 @@ router.post("/sendDonation/:id", async (req, res) => {
   try {
     const reqId = req.params.id;
     const amount = req.body.amount;
+    let paymentResp = await jazzCashTransaction(
+      amount,
+      process.env.mobileAccountNo
+    );
     await DonationRequestBen.findByIdAndUpdate(reqId, {
       status: "PaymentDone",
+      refNoBenefactor: paymentResp.response.ppTxnRefNo,
       amountReceived: amount,
     });
     res.status(201).json({ success: true, message: "Payment Done" });
