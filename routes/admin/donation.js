@@ -27,14 +27,9 @@ router.post("/addAmount/:id", async (req, res) => {
         .status(202)
         .json({ success: false, message: "Insufficient Donation" });
     }
-    let beneficiary = await DonationRequest.findById(req.params.id).populate(
-      "beneficiary"
-    );
-    if (!beneficiary.beneficiary.contact) {
-      return res.status(202).json({
-        success: false,
-        message: "Beneficiary have no jazzcash number",
-      });
+    let paymentResp = await jazzCashTransaction(amount, admin.contact);
+    if (paymentResp.success != true) {
+      return res.status(202).json({ success: false, message: paymentResp });
     }
     admin.amount = admin.amount - amount;
     await User.findByIdAndUpdate(admin._id, { $inc: { amount: -amount } });

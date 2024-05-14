@@ -41,11 +41,55 @@ function generateOTP() {
   return otp;
 }
 
+router.post("/againOTP", async (req, res) => {
+  try {
+    const { id } = req.body;
+    let date = new Date();
+    let expire = new Date(date.setMinutes(date.getMinutes() + 1));
+    let otp = generateOTP();
+    let user = await User.findById(id);
+    await Otp.findOneAndUpdate({ user: id }, { otp, expire });
+    const subject = "Sign Up OTP";
+    let body = `<p>Your One Time Password for Sign up Verification is <strong>${otp}</strong> \n Do not share it</p>`;
+    const mailOptions = {
+      from: `${process.env.MAIL_SENDER_NAME} <${process.env.MAIL_SENDER_EMAIL}>`,
+      to: user.email,
+      subject: subject,
+      html: body,
+    };
+
+    return transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error, "error in mail");
+        return res
+          .status(202)
+          .json({ success: false, message: "Error in sending mail" });
+      } else {
+        return res
+          .status(201)
+          .json({ success: true, message: "Check Mail for OTP" });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, name, role, location, firstName, lastName } = req.body;
+    const { email, password, name, role, location, firstName, lastName } =
+      req.body;
     let categories = [];
-    if (!email || !password || !name || !role || !location || !firstName || !lastName) {
+    if (
+      !email ||
+      !password ||
+      !name ||
+      !role ||
+      !location ||
+      !firstName ||
+      !lastName
+    ) {
       return res.status(202).json({ message: "Fill All Details" });
     }
     const exist = await User.findOne({
@@ -66,10 +110,12 @@ router.post("/register", async (req, res) => {
       categories,
       location,
       firstName,
-      lastName
+      lastName,
     });
     let otp = generateOTP();
-    await Otp.create({ user: user._id, otp });
+    let date = new Date();
+    let expire = new Date(date.setMinutes(date.getMinutes() + 1));
+    await Otp.create({ user: user._id, otp, expire });
     const subject = "Sign Up OTP";
     let body = `<p>Your One Time Password for Sign up Verification is <strong>${otp}</strong> \n Do not share it</p>`;
     const mailOptions = {
@@ -124,7 +170,7 @@ router.post("/login", async (req, res) => {
 router.post("/otp", async (req, res) => {
   try {
     const { id, otp } = req.body;
-    let chk = await Otp.findOne({ user: id, otp });
+    let chk = await Otp.findOne({ user: id, otp, expire: { $gt: Date.now() } });
     if (chk) {
       await Otp.findByIdAndDelete(chk._id);
       let user = await User.findByIdAndUpdate(
@@ -134,7 +180,7 @@ router.post("/otp", async (req, res) => {
       );
       return res.status(201).json({ message: "Correct", user });
     } else {
-      res.status(202).json({ message: "OTP incorrect" });
+      res.status(202).json({ message: "OTP incorrect or expired" });
     }
   } catch (error) {
     console.log(error);
